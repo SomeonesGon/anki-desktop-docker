@@ -11,6 +11,14 @@ services:
       - TZ=Europe/Berlin
       # Optional: Custom sync server
       # - ANKI_SYNC_SERVER=http://your-sync-server:8080
+      # Optional: Disable AnkiConnect auto-install (default: true)
+      # - ANKICONNECT_ENABLED=false
+      # Optional: Override AnkiConnect port (default: 8765)
+      # - ANKICONNECT_PORT=8765
+      # Optional: Disable Anki Beacon auto-install (default: true)
+      # - ANKIBEACON_ENABLED=false
+      # Optional: Override Anki Beacon webhook URL (default: http://localhost:7275)
+      # - ANKIBEACON_URL=http://your-webhook-receiver:7275
       # Optional: CJK font support (uncomment to enable)
       # - DOCKER_MODS=linuxserver/mods:universal-package-install
       # - INSTALL_PACKAGES=fonts-arphic-ukai|fonts-arphic-uming|fonts-ipafont-mincho|fonts-ipafont-gothic|fonts-unfonts-core
@@ -22,8 +30,10 @@ services:
       - 3000:3000
       # HTTPS (optional)
       - 3001:3001
-      # AnkiConnect API (if addon installed)
+      # AnkiConnect API
       - 8765:8765
+      # Anki Beacon webhook receiver (expose if running receiver on host/another container)
+      - 7275:7275
     restart: unless-stopped
     # Required for Anki/Qt
     security_opt:

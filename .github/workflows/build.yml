@@ -13,15 +13,15 @@ on:
     - cron: '0 3 * * 0'
   workflow_dispatch:
     inputs:
-      anki_launcher_version:
-        description: 'Anki launcher version to build'
+      anki_version:
+        description: 'Anki version to build (e.g. 26.09.4)'
         required: false
-        default: '25.09'
+        default: '26.09.4'
 
 env:
   REGISTRY: docker.io
   IMAGE_NAME: chrislongros/anki-desktop
-  ANKI_LAUNCHER_VERSION: ${{ github.event.inputs.anki_launcher_version || '25.09' }}
+  ANKI_VERSION: ${{ github.event.inputs.anki_version || '26.09.4' }}
 
 jobs:
   build:
@@ -64,7 +64,7 @@ jobs:
             ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ env.ANKI_LAUNCHER_VERSION }}
+            type=raw,value=${{ env.ANKI_VERSION }}
             type=sha,prefix=
             type=ref,event=branch
             type=ref,event=pr
@@ -78,9 +78,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            ANKI_LAUNCHER_VERSION=${{ env.ANKI_LAUNCHER_VERSION }}
+            ANKI_VERSION=${{ env.ANKI_VERSION }}
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
-            VERSION=${{ env.ANKI_LAUNCHER_VERSION }}
+            VERSION=${{ env.ANKI_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -91,5 +91,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ env.IMAGE_NAME }}
-          short-description: "Browser-accessible Anki Desktop with KasmVNC - Always Latest Version"
+          short-description: "Browser-accessible Anki Desktop with KasmVNC - Latest Version"
           readme-filepath: ./README.md
