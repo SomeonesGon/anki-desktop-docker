@@ -1,8 +1,8 @@
 # Anki Desktop Docker (KasmVNC)
 
-[![Build and Push](https://github.com/chrislongros/anki-desktop-docker/actions/workflows/build.yml/badge.svg)](https://github.com/chrislongros/anki-desktop-docker/actions/workflows/build.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/chrislongros/anki-desktop)](https://hub.docker.com/r/chrislongros/anki-desktop)
-[![Docker Image Size](https://img.shields.io/docker/image-size/chrislongros/anki-desktop/latest)](https://hub.docker.com/r/chrislongros/anki-desktop)
+[![Build and Push](https://github.com/SomeonesGon/anki-desktop-docker/actions/workflows/build.yml/badge.svg)](https://github.com/SomeonesGon/anki-desktop-docker/actions/workflows/build.yml)
+
+> Forked from [chrislongros/anki-desktop-docker](https://github.com/chrislongros/anki-desktop-docker), updated for Anki 26.x with auto-installed AnkiConnect and Anki Beacon.
 
 High-performance browser-accessible Anki Desktop using [LinuxServer's KasmVNC](https://github.com/linuxserver/docker-baseimage-kasmvnc) for optimal streaming performance.
 
@@ -47,7 +47,7 @@ docker run -d \
   -v anki_data:/config \
   --security-opt seccomp=unconfined \
   --shm-size=1gb \
-  chrislongros/anki-desktop:latest
+  ghcr.io/someonesgon/anki-desktop-docker:latest
 ```
 
 Then open **http://localhost:3000** in your browser.
@@ -57,7 +57,7 @@ Then open **http://localhost:3000** in your browser.
 ```yaml
 services:
   anki-desktop:
-    image: chrislongros/anki-desktop:latest
+    image: ghcr.io/someonesgon/anki-desktop-docker:latest
     container_name: anki-desktop
     ports:
       - "3000:3000"    # HTTP
@@ -140,7 +140,7 @@ docker run -d \
   -e ANKI_SYNC_SERVER=http://192.168.1.100:8080 \
   --security-opt seccomp=unconfined \
   --shm-size=1gb \
-  chrislongros/anki-desktop:latest
+  ghcr.io/someonesgon/anki-desktop-docker:latest
 ```
 
 ## CJK Font Support
@@ -156,7 +156,7 @@ environment:
 ## Building Locally
 
 ```bash
-git clone https://github.com/chrislongros/anki-desktop-docker.git
+git clone https://github.com/SomeonesGon/anki-desktop-docker.git
 cd anki-desktop-docker
 docker build -t anki-desktop .
 ```
@@ -166,7 +166,7 @@ docker build -t anki-desktop .
 For TrueNAS SCALE users, create a custom app with these settings:
 
 ```yaml
-Container Image: chrislongros/anki-desktop:latest
+Container Image: ghcr.io/someonesgon/anki-desktop-docker:latest
 Security Context:
   - seccomp: unconfined
 Resources:
