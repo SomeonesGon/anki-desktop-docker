@@ -19,6 +19,10 @@ services:
       # - ANKIBEACON_ENABLED=false
       # Optional: Override Anki Beacon webhook URL (default: http://localhost:7275)
       # - ANKIBEACON_URL=http://your-webhook-receiver:7275
+      # Optional: Disable Local Audio for Yomichan auto-install (default: true)
+      # - LOCALAUDIO_ENABLED=false
+      # Optional: Override Local Audio server port (default: 5050)
+      # - LOCALAUDIO_PORT=5050
       # Optional: CJK font support (uncomment to enable)
       # - DOCKER_MODS=linuxserver/mods:universal-package-install
       # - INSTALL_PACKAGES=fonts-arphic-ukai|fonts-arphic-uming|fonts-ipafont-mincho|fonts-ipafont-gothic|fonts-unfonts-core
@@ -34,6 +38,8 @@ services:
       - 8765:8765
       # Anki Beacon webhook receiver (expose if running receiver on host/another container)
       - 7275:7275
+      # Local Audio Server for Yomichan/Yomitan
+      - 5050:5050
     restart: unless-stopped
     # Required for Anki/Qt
     security_opt:

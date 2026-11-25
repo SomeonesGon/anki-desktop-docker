@@ -94,5 +94,34 @@ EOF
     fi
 fi
 
+# ---------------------------------------------------------------------------
+# Local Audio Server for Yomichan/Yomitan (yomidevs/local-audio-yomichan)
+# ---------------------------------------------------------------------------
+if [ "${LOCALAUDIO_ENABLED:-true}" = "true" ]; then
+    LOCALAUDIO_DIR="$ADDONS_DIR/local-audio-yomichan"
+    # Auto-install from staging if not yet present in persistent storage
+    if [ ! -d "$LOCALAUDIO_DIR" ]; then
+        echo "[INFO] Installing Local Audio for Yomichan from staging..."
+        mkdir -p "$LOCALAUDIO_DIR"
+        cp -a /opt/anki-addons-staging/local-audio-yomichan/. "$LOCALAUDIO_DIR/"
+        echo "[INFO] Local Audio for Yomichan installed."
+    fi
+    LOCALAUDIO_PORT="${LOCALAUDIO_PORT:-5050}"
+    python3 - "$LOCALAUDIO_DIR/config.json" "$LOCALAUDIO_PORT" <<'EOF'
+import json, sys
+path, port = sys.argv[1], int(sys.argv[2])
+try:
+    with open(path, encoding="utf-8") as f:
+        cfg = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    cfg = {}
+cfg["port"] = port
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(cfg, f, indent=4)
+    f.write("\n")
+EOF
+    echo "[INFO] Local Audio for Yomichan configured on 0.0.0.0:${LOCALAUDIO_PORT}"
+fi
+
 # Launch Anki (26.x self-contained bundle - no launcher needed)
 exec /opt/anki/anki 2>/dev/null

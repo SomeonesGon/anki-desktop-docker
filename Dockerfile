@@ -92,8 +92,16 @@ RUN \
     curl -fLo /tmp/anki-beacon.ankiaddon \
         "https://github.com/bpwhelan/AnkiBeacon/releases/latest/download/Anki.Beacon.ankiaddon" && \
     unzip -q /tmp/anki-beacon.ankiaddon -d /opt/anki-addons-staging/1577021707 && \
+    echo "**** download Local Audio for Yomichan addon to staging ****" && \
+    mkdir -p /opt/anki-addons-staging/local-audio-yomichan && \
+    curl -fLo /tmp/local-audio.tar.gz \
+        "https://github.com/yomidevs/local-audio-yomichan/archive/refs/heads/master.tar.gz" && \
+    tar -xzf /tmp/local-audio.tar.gz -C /tmp && \
+    cp -a /tmp/local-audio-yomichan-master/plugin/. /opt/anki-addons-staging/local-audio-yomichan/ && \
+    sed -i 's/ThreadingHTTPServer((HOSTNAME, port)/ThreadingHTTPServer(("0.0.0.0", port)/' /opt/anki-addons-staging/local-audio-yomichan/server.py && \
+    grep -q 'ThreadingHTTPServer(("0.0.0.0", port)' /opt/anki-addons-staging/local-audio-yomichan/server.py && \
     echo "**** cleanup ****" && \
-    rm -rf /tmp/anki* && \
+    rm -rf /tmp/anki* /tmp/local-audio* && \
     apt-get remove -y zstd unzip && \
     apt-get autoremove -y && \
     apt-get clean && \
@@ -105,8 +113,8 @@ RUN \
 # Copy application config
 COPY root/ /
 
-# Expose ports: KasmVNC (3000/3001) + AnkiConnect (8765) + Anki Beacon (7275)
-EXPOSE 3000 3001 8765 7275
+# Expose ports: KasmVNC (3000/3001) + AnkiConnect (8765) + Anki Beacon (7275) + Local Audio (5050)
+EXPOSE 3000 3001 8765 7275 5050
 
 # Healthcheck - verify KasmVNC is responding
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \

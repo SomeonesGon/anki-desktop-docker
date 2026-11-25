@@ -2,7 +2,7 @@
 
 [![Build and Push](https://github.com/SomeonesGon/anki-desktop-docker/actions/workflows/build.yml/badge.svg)](https://github.com/SomeonesGon/anki-desktop-docker/actions/workflows/build.yml)
 
-> Forked from [chrislongros/anki-desktop-docker](https://github.com/chrislongros/anki-desktop-docker), updated for Anki 26.x with auto-installed AnkiConnect and Anki Beacon.
+> Forked from [chrislongros/anki-desktop-docker](https://github.com/chrislongros/anki-desktop-docker), updated for Anki 26.x with auto-installed AnkiConnect, Anki Beacon, and Local Audio for Yomichan.
 
 High-performance browser-accessible Anki Desktop using [LinuxServer's KasmVNC](https://github.com/linuxserver/docker-baseimage-kasmvnc) for optimal streaming performance.
 
@@ -18,6 +18,7 @@ High-performance browser-accessible Anki Desktop using [LinuxServer's KasmVNC](h
 - 🔄 **Custom Sync Server** - Configure your own Anki sync server via environment variable
 - 🔌 **AnkiConnect Built-in** - Auto-installed and pre-configured on port 8765
 - 📡 **Anki Beacon Built-in** - Auto-installed webhook emitter for event-driven integrations
+- 🔊 **Local Audio for Yomichan Built-in** - Auto-installed and pre-configured on port 5050
 - 📦 **Multi-arch** - Supports both amd64 and arm64 platforms
 - 🔒 **Secure** - Optional HTTPS support on port 3001
 - 💾 **Persistent Data** - Volume mount preserves all Anki data
@@ -31,6 +32,7 @@ High-performance browser-accessible Anki Desktop using [LinuxServer's KasmVNC](h
 | VNC Technology | **KasmVNC** (high performance) | noVNC (basic) |
 | AnkiConnect | **Auto-installed & pre-configured** | Manual setup |
 | Anki Beacon | **Auto-installed** | ❌ None |
+| Local Audio (Yomichan/Yomitan) | **Auto-installed & pre-configured** | Manual setup |
 | System Python | **Not required** (self-contained) | Required |
 | Healthcheck | **✅ Built-in** | ❌ None |
 | Multi-arch | **✅ amd64 + arm64** | Often amd64 only |
@@ -44,6 +46,7 @@ docker run -d \
   --name anki-desktop \
   -p 3000:3000 \
   -p 8765:8765 \
+  -p 5050:5050 \
   -v anki_data:/config \
   --security-opt seccomp=unconfined \
   --shm-size=1gb \
@@ -64,6 +67,7 @@ services:
       - "3001:3001"    # HTTPS (optional)
       - "8765:8765"    # AnkiConnect API
       - "7275:7275"    # Anki Beacon webhook (optional)
+      - "5050:5050"    # Local Audio Server (Yomichan/Yomitan)
     volumes:
       - anki_data:/config
     environment:
@@ -95,6 +99,8 @@ volumes:
 | `ANKICONNECT_PORT` | `8765` | Port AnkiConnect listens on |
 | `ANKIBEACON_ENABLED` | `true` | Auto-install Anki Beacon |
 | `ANKIBEACON_URL` | - | Webhook URL Anki Beacon posts events to (uses addon default if unset) |
+| `LOCALAUDIO_ENABLED` | `true` | Auto-install Local Audio Server for Yomichan |
+| `LOCALAUDIO_PORT` | `5050` | Port Local Audio Server listens on |
 
 ## Ports
 
@@ -104,6 +110,7 @@ volumes:
 | `3001` | HTTPS web interface |
 | `8765` | AnkiConnect API |
 | `7275` | Anki Beacon webhook (default; expose only if your receiver is on the host) |
+| `5050` | Local Audio Server for Yomichan/Yomitan |
 
 ## Volumes
 
@@ -175,6 +182,7 @@ Ports:
   - 3000:3000 (Web UI)
   - 8765:8765 (AnkiConnect)
   - 7275:7275 (Anki Beacon, optional)
+  - 5050:5050 (Local Audio Server, optional)
 Storage:
   - Host Path or PVC → /config
 Environment:
@@ -261,6 +269,63 @@ environment:
   - ANKIBEACON_ENABLED=false
 ```
 
+### Local Audio Server for Yomichan
+
+[Local Audio Server for Yomichan](https://github.com/yomidevs/local-audio-yomichan) is **auto-installed** and configured to bind to `0.0.0.0:5050` so it works with Docker port mapping (`-p 5050:5050`) while still returning `http://127.0.0.1:5050/...` URLs to Yomitan/Yomichan on your host browser.
+
+When upgrading from an older image, the add-on is added into your existing `/config` volume on startup without modifying your profiles, decks, or other add-ons. Any custom keys in `config.json` (such as `sources`) are preserved while `port` stays synced to `LOCALAUDIO_PORT`.
+
+#### Setup
+
+1. **Expose port `5050`** in your `docker run` command or `docker-compose.yml` (`-p 5050:5050`).
+2. **Download your audio collections** (e.g., `nhk16_files`, `shinmeikai8_files`, `forvo_files`, `jpod_files`, `jpod_alternate_files`, `ozk5_files`, and optionally `jmdict_forms.json`) following the [yomidevs/local-audio-yomichan](https://github.com/yomidevs/local-audio-yomichan#installation) instructions.
+3. **Place the extracted folders/files** inside your persistent `/config` volume under:
+   ```
+   anki_data/.local/share/Anki2/addons21/local-audio-yomichan/user_files/
+   ```
+   For example:
+   ```
+   anki_data/.local/share/Anki2/addons21/local-audio-yomichan/user_files/
+   ├── forvo_files/
+   ├── jmdict_forms.json        # optional
+   ├── jpod_alternate_files/
+   ├── jpod_files/
+   ├── nhk16_files/
+   ├── ozk5_files/
+   └── shinmeikai8_files/
+   ```
+4. **Regenerate the audio database**:
+   - In Anki (via the web UI at `http://localhost:3000`), go to **Tools → Local Audio Server → Regenerate database** (or **Show statistics** to verify indexed entries).
+   - If you placed the files before starting the container for the first time, the database is generated automatically on startup.
+5. **Configure Yomitan / Yomichan** in your browser:
+   - Open Yomitan Settings → **Audio** → **Configure audio playback sources**.
+   - Add a **Custom URL (JSON)** source with URL:
+     ```
+     http://localhost:5050/?term={term}&reading={reading}
+     ```
+
+#### Testing & Customization
+
+Test the server from your host:
+```bash
+curl http://localhost:5050/
+curl "http://localhost:5050/?term=読む&reading=よむ"
+```
+
+To use a custom port (updates `config.json` `"port"` without overwriting custom `"sources"`):
+```yaml
+environment:
+  - LOCALAUDIO_PORT=5051
+ports:
+  - "5051:5051"
+```
+
+To disable it:
+```yaml
+environment:
+  - LOCALAUDIO_ENABLED=false
+```
+
 ## License
 
 MIT License - see [LICENSE](LICENSE)
@@ -272,3 +337,4 @@ MIT License - see [LICENSE](LICENSE)
 - [KasmVNC](https://kasmweb.com/kasmvnc) - High-performance VNC
 - [AnkiConnect](https://github.com/FooSoft/anki-connect) - Anki API addon by FooSoft
 - [Anki Beacon](https://github.com/bpwhelan/AnkiBeacon) - Webhook event emitter by bpwhelan
+- [Local Audio for Yomichan](https://github.com/yomidevs/local-audio-yomichan) - Local audio server addon by yomidevs
